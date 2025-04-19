@@ -3,6 +3,7 @@ package calculator;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.datatransfer.*;
 import java.io.*;
 import java.util.List;
 
@@ -31,19 +32,19 @@ public class CalculatorUI extends JFrame {
         display.setPreferredSize(new Dimension(500, 50));  // Điều chỉnh kích thước của display
 
         JPanel funcPanel = new JPanel(new GridLayout(1, 8, 5, 5)); // Điều chỉnh GridLayout cho bàn phím
-        String[] funcLabels = {"MC","MR","M+","M-","C","CE","←","%"};  
+        String[] funcLabels = {"MC", "C", "CE", "←", "%", "Copy", "Paste", "→"};  // Sửa các chức năng
         addButtons(funcPanel, funcLabels);
 
         JPanel advPanel = new JPanel(new GridLayout(1, 8, 5, 5)); // Điều chỉnh GridLayout cho bàn phím
-        String[] advLabels = {"√","^","log","ln","sin","cos","tan","="};
+        String[] advLabels = {"√", "^", "log", "ln", "sin", "cos", "tan", "="};
         addButtons(advPanel, advLabels);
 
         JPanel gridPanel = new JPanel(new GridLayout(5, 4, 5, 5)); // Điều chỉnh số dòng và cột trong gridPanel
         String[] gridLabels = {
-            "7","8","9","÷",
-            "4","5","6","×",
-            "1","2","3","−",
-            "0",".","±","+"};
+            "7", "8", "9", "÷",
+            "4", "5", "6", "×",
+            "1", "2", "3", "−",
+            "0", ".", "±", "+"};
         addButtons(gridPanel, gridLabels);
 
         // Bảng điều khiển
@@ -51,7 +52,7 @@ public class CalculatorUI extends JFrame {
         JButton histBtn = new JButton("History");
         JButton clearHistBtn = new JButton("Clear History");
         JButton themeBtn = new JButton("D/L MODE");
-        JButton unitBtn = new JButton("Toggle Unit (Deg/Rad)");  
+        JButton unitBtn = new JButton("Toggle Unit (Deg/Rad)");
         styleButton(histBtn);
         styleButton(clearHistBtn);
         styleButton(themeBtn);
@@ -59,7 +60,7 @@ public class CalculatorUI extends JFrame {
         histBtn.addActionListener(e -> showHistory());
         clearHistBtn.addActionListener(e -> clearHistory());
         themeBtn.addActionListener(e -> switchTheme());
-        unitBtn.addActionListener(e -> toggleUnit());  
+        unitBtn.addActionListener(e -> toggleUnit());
         controlPanel.add(histBtn);
         controlPanel.add(clearHistBtn);
         controlPanel.add(themeBtn);
@@ -105,9 +106,9 @@ public class CalculatorUI extends JFrame {
                 case "←": backspace(); break;
                 case "%": handlePercentage(); break;
                 case "MC": logic.memoryClear(); break;
-                case "MR": display.setText(Double.toString(logic.memoryRecall())); break;
-                case "M+": logic.memoryAdd(parseDisplay()); break;
-                case "M-": logic.memorySubtract(parseDisplay()); break;
+                case "Copy": copyResultToClipboard(); break;
+                case "Paste": pasteResultFromClipboard(); break;
+                case "→": forward(); break;
                 case "√": append("sqrt("); break;
                 case "^": append("^"); break;
                 case "log": append("log10("); break;
@@ -150,7 +151,7 @@ public class CalculatorUI extends JFrame {
     private void calculate() {
         try {
             String expr = display.getText().replace("×", "*").replace("÷", "/");
-            expr = autoFixParentheses(expr); 
+            expr = autoFixParentheses(expr);
             double res = logic.evaluateExpression(expr);
             String resultStr = (res == (long) res) ? String.format("%d", (long) res) : Double.toString(res);
             display.setText(resultStr);
@@ -197,7 +198,7 @@ public class CalculatorUI extends JFrame {
 
     private void switchTheme() {
         darkMode = !darkMode;
-        Color bg = darkMode ? new Color(45,45,45) : Color.WHITE;
+        Color bg = darkMode ? new Color(45, 45, 45) : Color.WHITE;
         Color fg = darkMode ? Color.WHITE : Color.BLACK;
         getContentPane().setBackground(bg);
         display.setBackground(bg);
@@ -255,6 +256,31 @@ public class CalculatorUI extends JFrame {
             append(function + "(" + angleValue + ")");
         } catch (NumberFormatException e) {
             display.setText("Error");
+        }
+    }
+
+    private void copyResultToClipboard() {
+        String result = display.getText();
+        StringSelection selection = new StringSelection(result);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(selection, selection);
+    }
+
+    private void pasteResultFromClipboard() {
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        try {
+            String clipboardText = (String) clipboard.getData(DataFlavor.stringFlavor);
+            display.setText(clipboardText);
+        } catch (UnsupportedFlavorException | IOException e) {
+            display.setText("Error");
+        }
+    }
+
+    private void forward() {
+        String currentText = display.getText();
+        if (currentText.length() > 0) {
+            String nextChar = currentText.substring(1);  // Di chuyển ký tự đầu tiên
+            display.setText(nextChar);
         }
     }
 
